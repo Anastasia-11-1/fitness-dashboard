@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Динамика вовлечённости по типам тренировок</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--ink:#1d2635;--muted:#7b8798;--line:#e9edf3;--bg:#f2f4f7;--card:#fff}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    .page{max-width:1280px;margin:0 auto;padding:42px 24px 54px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#748096;margin-bottom:10px}
+    h1{font-size:clamp(28px,4vw,48px);line-height:1.08;letter-spacing:-.045em;margin:0 0 14px}.lead{max-width:780px;color:var(--muted);font-size:15px;line-height:1.65;margin:0 0 28px}
+    .card{background:var(--card);border-radius:24px;box-shadow:0 16px 42px rgba(40,53,78,.08);padding:24px}.chart-card{margin-bottom:18px}.chart-top{display:flex;justify-content:space-between;align-items:start;gap:20px;margin-bottom:12px}.chart-top h2{font-size:20px;margin:0 0 5px}.hint{font-size:12px;color:var(--muted);margin:0}.chart-wrap{height:570px;position:relative}.legend{display:grid;grid-template-columns:repeat(3,auto);gap:9px 18px;align-items:center}.legend-item{display:flex;gap:7px;align-items:center;color:#566174;font-size:12px;white-space:nowrap}.swatch{width:12px;height:12px;border-radius:4px;display:inline-block}.emoji{font-size:19px}
+    .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.fact{min-height:146px;position:relative;overflow:hidden}.fact:after{content:"";position:absolute;width:120px;height:120px;right:-46px;top:-50px;border-radius:50%;background:#f3f5f8}.fact h3{position:relative;z-index:1;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:0 0 12px}.fact-value{position:relative;z-index:1;font-size:30px;font-weight:800;letter-spacing:-.04em}.fact-text{position:relative;z-index:1;color:var(--muted);font-size:13px;line-height:1.45;margin-top:6px}.footer-note{color:#99a3b1;font-size:11px;margin:14px 2px 0}
+    @media(max-width:800px){.page{padding:28px 14px}.chart-top{display:block}.legend{margin-top:16px;grid-template-columns:repeat(2,auto)}.chart-wrap{height:500px}.facts{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="eyebrow">Онлайн-программа · 10 недель</div>
+    <h1>Динамика вовлечённости по типам тренировок 📈</h1>
+    <p class="lead">Высота кружочка показывает, насколько люди активны, а его размер — сколько человек участвует в тренировках.</p>
+
+    <section class="card chart-card">
+      <div class="chart-top">
+        <div><h2>Карта активности</h2><p class="hint">По горизонтали — недели программы · по вертикали — уровень активности</p></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
+      <p class="footer-note">Размер пузырька пропорционален числу участников. Эмодзи помогают быстро отличать типы тренировок.</p>
+    </section>
+
+    <section class="facts">
+      <article class="card fact"><h3>Самый высокий пик активности</h3><div class="fact-value" id="peakValue">—</div><div class="fact-text" id="peakText">—</div></article>
+      <article class="card fact"><h3>Самое большое падение</h3><div class="fact-value" id="dropValue">—</div><div class="fact-text" id="dropText">—</div></article>
+      <article class="card fact"><h3>Самая популярная тренировка</h3><div class="fact-value" id="popularValue">—</div><div class="fact-text" id="popularText">—</div></article>
+    </section>
+  </main>
+
+  <script>
+    const types = [
+      {name:'Разминка', color:'#f3a23a', emoji:'🧘', activity:[2.08,2.02,1.95,1.86,1.78,1.69,1.61,1.55,1.52,1.50], people:[96,93,84,58,89,68,66,62,58,57]},
+      {name:'Кардио', color:'#4d8ee8', emoji:'🏃', activity:[2.35,2.30,2.24,2.18,2.12,2.05,1.98,1.91,1.85,1.79], people:[76,69,64,49,68,62,52,56,46,45]},
+      {name:'Силовая', color:'#a9633b', emoji:'🏋️', activity:[2.55,2.49,2.42,2.35,2.28,2.18,2.10,2.03,1.96,1.88], people:[64,61,67,55,58,53,53,44,40,46]},
+      {name:'Интенсив', color:'#e2554f', emoji:'🔥', activity:[2.72,2.48,2.57,2.44,2.36,2.08,2.27,2.16,2.11,2.04], people:[38,35,31,35,31,18,35,34,34,41]},
+      {name:'Дэнс', color:'#805bd5', emoji:'💃', activity:[2.18,2.24,2.27,2.31,2.34,2.17,2.22,2.05,2.12,2.19], people:[56,53,54,36,47,29,43,41,33,41]},
+      {name:'Йога', color:'#32b8aa', emoji:'🧘‍♀️', activity:[2.05,2.10,1.72,2.12,2.17,2.20,2.24,2.28,2.31,2.35], people:[49,54,54,50,45,37,48,47,38,32]}
+    ];
+    const labels=Array.from({length:10},(_,i)=>`Неделя ${i+1}`);
+    document.querySelector('#legend').innerHTML=types.map(t=>`<div class="legend-item"><span class="swatch" style="background:${t.color}"></span><span class="emoji">${t.emoji}</span><span>${t.name}</span></div>`).join('');
+
+    const emojiPlugin={id:'bubbleEmoji',afterDatasetsDraw(chart){const ctx=chart.ctx;chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);meta.data.forEach((el,i)=>{const p=el.getProps(['x','y'],true);ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='17px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(ds.emoji,p.x,p.y);ctx.restore()})})}};
+    const rgba=(hex,alpha)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${alpha})`};
+    // Небольшое «расслоение» вокруг каждой недели не меняет данные,
+    // но позволяет увидеть все типы тренировок без плотной стопки пузырей.
+    const xOffsets=[-.38,-.23,-.08,.08,.23,.38];
+    const yOffsets=[.10,-.10,.20,-.20,.04,-.04];
+    const datasets=types.map((t,ti)=>({label:t.name,emoji:t.emoji,backgroundColor:rgba(t.color,.40),borderColor:rgba(t.color,.78),borderWidth:2,data:t.activity.map((a,i)=>({x:i+1+xOffsets[ti],y:Math.max(1.37,Math.min(2.83,a+yOffsets[ti])),r:Math.max(20,Math.sqrt(t.people[i])*3.65),week:i+1,activity:a,people:t.people[i]}))}));
+    const chart=new Chart(document.getElementById('activityChart'),{type:'bubble',data:{labels,datasets},plugins:[emojiPlugin],options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{min:0,max:10.5,grid:{color:'#e9edf3'},border:{display:false},title:{display:true,text:'Неделя',color:'#7b8798',font:{size:12}},ticks:{stepSize:1,color:'#8994a4',callback:v=>v===0?'0':v===10.5?'10,5':v}},y:{min:1.35,max:2.85,grid:{color:'#e9edf3'},border:{display:false},title:{display:true,text:'Уровень активности',color:'#7b8798',font:{size:12}},ticks:{stepSize:.25,color:'#8994a4',callback:v=>v.toFixed(2).replace('.',',')}}}}});
+
+    const peak=types.flatMap(t=>t.activity.map((a,i)=>({t,w:i+1,a,p:t.people[i]}))).reduce((x,y)=>y.a>x.a?y:x);
+    const drops=types.flatMap(t=>t.activity.slice(1).map((a,i)=>({t,w:i+2,from:t.activity[i],a,drop:a-t.activity[i]}))); const drop=drops.reduce((x,y)=>y.drop<x.drop?y:x);
+    const popular=types.map(t=>({t,total:t.people.reduce((a,b)=>a+b,0)})).reduce((x,y)=>y.total>x.total?y:x);
+    document.querySelector('#peakValue').textContent=`${peak.a.toFixed(2)} ${peak.t.emoji}`;document.querySelector('#peakText').textContent=`Неделя ${peak.w} · ${peak.t.name}. В этот момент участвовали ${peak.p} человек.`;
+    document.querySelector('#dropValue').textContent=`${drop.drop.toFixed(2)} ↓`;document.querySelector('#dropText').textContent=`${drop.t.name}: с ${drop.from.toFixed(2)} до ${drop.a.toFixed(2)} между неделями ${drop.w-1} и ${drop.w}.`;
+    document.querySelector('#popularValue').textContent=`${popular.t.emoji} ${popular.t.name}`;document.querySelector('#popularText').textContent=`Всего ${popular.total} участий за 10 недель — больше, чем у остальных типов.`;
+  </script>
+</body>
+</html>
