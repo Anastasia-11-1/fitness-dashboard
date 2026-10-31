@@ -3,67 +3,761 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Динамика вовлечённости по типам тренировок</title>
+  <title>Динамика вовлеченности по типам тренировок</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
-    :root{--ink:#1d2635;--muted:#7b8798;--line:#e9edf3;--bg:#f2f4f7;--card:#fff}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    .page{max-width:1280px;margin:0 auto;padding:42px 24px 54px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#748096;margin-bottom:10px}
-    h1{font-size:clamp(28px,4vw,48px);line-height:1.08;letter-spacing:-.045em;margin:0 0 14px}.lead{max-width:780px;color:var(--muted);font-size:15px;line-height:1.65;margin:0 0 28px}
-    .card{background:var(--card);border-radius:24px;box-shadow:0 16px 42px rgba(40,53,78,.08);padding:24px}.chart-card{margin-bottom:18px}.chart-top{display:flex;justify-content:space-between;align-items:start;gap:20px;margin-bottom:12px}.chart-top h2{font-size:20px;margin:0 0 5px}.hint{font-size:12px;color:var(--muted);margin:0}.chart-wrap{height:570px;position:relative}.legend{display:grid;grid-template-columns:repeat(3,auto);gap:9px 18px;align-items:center}.legend-item{display:flex;gap:7px;align-items:center;color:#566174;font-size:12px;white-space:nowrap}.swatch{width:12px;height:12px;border-radius:4px;display:inline-block}.emoji{font-size:19px}
-    .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.fact{min-height:146px;position:relative;overflow:hidden}.fact:after{content:"";position:absolute;width:120px;height:120px;right:-46px;top:-50px;border-radius:50%;background:#f3f5f8}.fact h3{position:relative;z-index:1;font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:0 0 12px}.fact-value{position:relative;z-index:1;font-size:30px;font-weight:800;letter-spacing:-.04em}.fact-text{position:relative;z-index:1;color:var(--muted);font-size:13px;line-height:1.45;margin-top:6px}.footer-note{color:#99a3b1;font-size:11px;margin:14px 2px 0}
-    @media(max-width:800px){.page{padding:28px 14px}.chart-top{display:block}.legend{margin-top:16px;grid-template-columns:repeat(2,auto)}.chart-wrap{height:500px}.facts{grid-template-columns:1fr}}
+    :root {
+      --ink: #172033;
+      --muted: #68758a;
+      --line: #e5eaf1;
+      --bg: #f3f5f8;
+      --card: #ffffff;
+      --shadow: 0 14px 36px rgba(35, 47, 70, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      width: min(1540px, 100%);
+      margin: 0 auto;
+      padding: 30px 28px 38px;
+    }
+
+    .page-header { margin-bottom: 20px; }
+
+    .eyebrow {
+      margin-bottom: 7px;
+      color: #65728a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      letter-spacing: -.035em;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.35fr) minmax(300px, .8fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(225, 230, 238, .9);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .main-card {
+      min-width: 0;
+      padding: 24px 24px 18px;
+    }
+
+    .chart-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .chart-heading h2 {
+      margin: 0 0 7px;
+      font-size: 22px;
+      letter-spacing: -.02em;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .filter-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 7px 10px;
+      border: 1px solid #dfe5ed;
+      border-radius: 999px;
+      background: #f7f9fb;
+      color: #677489;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .filter-state.active {
+      border-color: #b9d4f0;
+      background: #eef6ff;
+      color: #245f9e;
+    }
+
+    .filter-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #9aa5b5;
+    }
+
+    .filter-state.active .filter-dot {
+      background: #2878d0;
+      box-shadow: 0 0 0 4px rgba(40, 120, 208, .12);
+    }
+
+    .reset-filter {
+      display: none;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .filter-state.active .reset-filter { display: inline; }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, max-content);
+      gap: 8px 15px;
+      flex: 0 0 auto;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #4f5d73;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+    }
+
+    .main-chart-wrap {
+      position: relative;
+      height: 650px;
+    }
+
+    .method-note {
+      margin: 10px 4px 0;
+      color: #8a95a6;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .side-column {
+      display: grid;
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .mini-card {
+      display: flex;
+      min-height: 0;
+      flex-direction: column;
+      padding: 17px 17px 12px;
+    }
+
+    .mini-card h3 {
+      margin: 0 0 3px;
+      font-size: 14px;
+      letter-spacing: -.01em;
+    }
+
+    .mini-card p {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .mini-filter-caption {
+      color: #2878d0;
+      font-weight: 700;
+    }
+
+    .mini-chart-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 145px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .side-column { grid-template-columns: repeat(3, 1fr); grid-template-rows: none; }
+      .mini-card { min-height: 250px; }
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 22px 12px 30px; }
+      .chart-heading { display: block; }
+      .legend { margin-top: 16px; grid-template-columns: repeat(2, max-content); }
+      .main-card { padding: 18px 12px 14px; }
+      .main-chart-wrap { height: 610px; }
+      .side-column { grid-template-columns: 1fr; }
+      .mini-card { min-height: 245px; }
+    }
   </style>
 </head>
 <body>
   <main class="page">
-    <div class="eyebrow">Онлайн-программа · 10 недель</div>
-    <h1>Динамика вовлечённости по типам тренировок 📈</h1>
-    <p class="lead">Высота кружочка показывает, насколько люди активны, а его размер — сколько человек участвует в тренировках.</p>
+    <header class="page-header">
+      <div class="eyebrow">Исследовательский дашборд · Онлайн-программа · 10 недель</div>
+      <h1>Как меняется интерес к тренировкам</h1>
+    </header>
 
-    <section class="card chart-card">
-      <div class="chart-top">
-        <div><h2>Карта активности</h2><p class="hint">По горизонтали — недели программы · по вертикали — уровень активности</p></div>
-        <div class="legend" id="legend"></div>
-      </div>
-      <div class="chart-wrap"><canvas id="activityChart"></canvas></div>
-      <p class="footer-note">Размер пузырька пропорционален числу участников. Эмодзи помогают быстро отличать типы тренировок.</p>
-    </section>
+    <div class="dashboard-grid">
+      <section class="card main-card">
+        <div class="chart-heading">
+          <div>
+            <h2>Динамика вовлеченности по типам тренировок</h2>
+            <p class="subtitle">Размер пузырька = среднее число просмотров на 1 участника (всего 101 участник). По вертикали — типы тренировок.</p>
+            <div class="filter-state" id="filterState">
+              <span class="filter-dot"></span>
+              <span id="filterText">Все недели и типы · нажмите на пузырек для фильтрации</span>
+              <button class="reset-filter" id="resetFilter" type="button">Сбросить</button>
+            </div>
+          </div>
+          <div class="legend" id="legend" aria-label="Типы тренировок"></div>
+        </div>
 
-    <section class="facts">
-      <article class="card fact"><h3>Самый высокий пик активности</h3><div class="fact-value" id="peakValue">—</div><div class="fact-text" id="peakText">—</div></article>
-      <article class="card fact"><h3>Самое большое падение</h3><div class="fact-value" id="dropValue">—</div><div class="fact-text" id="dropText">—</div></article>
-      <article class="card fact"><h3>Самая популярная тренировка</h3><div class="fact-value" id="popularValue">—</div><div class="fact-text" id="popularText">—</div></article>
-    </section>
+        <div class="main-chart-wrap">
+          <canvas id="engagementChart" aria-label="Вовлеченность по неделям и типам тренировок"></canvas>
+        </div>
+        <p class="method-note">Вовлеченность = количество просмотров выбранного типа за неделю / 101 участник. Число на пузырьке — значение вовлеченности.</p>
+      </section>
+
+      <aside class="side-column" aria-label="Дополнительные графики">
+        <section class="card mini-card">
+          <h3>Оценки тренеров</h3>
+          <p>Средняя оценка по шкале от 1 до 5 · <span class="mini-filter-caption">все данные</span></p>
+          <div class="mini-chart-wrap"><canvas id="trainerChart"></canvas></div>
+        </section>
+
+        <section class="card mini-card">
+          <h3>Кандидаты на перезапись</h3>
+          <p>Топ-7 тренировок с наименьшей средней глубиной · <span class="mini-filter-caption">все данные</span></p>
+          <div class="mini-chart-wrap"><canvas id="candidatesChart"></canvas></div>
+        </section>
+
+        <section class="card mini-card">
+          <h3>Структура выбора тренировок по сегментам</h3>
+          <p>Что смотрят те, кто досматривает тренировки до конца, и те, кто часто бросает · <span class="mini-filter-caption">все данные</span></p>
+          <div class="mini-chart-wrap"><canvas id="segmentsChart"></canvas></div>
+        </section>
+      </aside>
+    </div>
   </main>
 
   <script>
+    const participantCount = 101;
+    const weeks = Array.from({length: 10}, (_, index) => index + 1);
+
+    // Фактические агрегаты из листа «Просмотры» файла
+    // «Онлайн-тренировки, 10 недель.xlsx».
     const types = [
-      {name:'Разминка', color:'#f3a23a', emoji:'🧘', activity:[2.08,2.02,1.95,1.86,1.78,1.69,1.61,1.55,1.52,1.50], people:[96,93,84,58,89,68,66,62,58,57]},
-      {name:'Кардио', color:'#4d8ee8', emoji:'🏃', activity:[2.35,2.30,2.24,2.18,2.12,2.05,1.98,1.91,1.85,1.79], people:[76,69,64,49,68,62,52,56,46,45]},
-      {name:'Силовая', color:'#a9633b', emoji:'🏋️', activity:[2.55,2.49,2.42,2.35,2.28,2.18,2.10,2.03,1.96,1.88], people:[64,61,67,55,58,53,53,44,40,46]},
-      {name:'Интенсив', color:'#e2554f', emoji:'🔥', activity:[2.72,2.48,2.57,2.44,2.36,2.08,2.27,2.16,2.11,2.04], people:[38,35,31,35,31,18,35,34,34,41]},
-      {name:'Дэнс', color:'#805bd5', emoji:'💃', activity:[2.18,2.24,2.27,2.31,2.34,2.17,2.22,2.05,2.12,2.19], people:[56,53,54,36,47,29,43,41,33,41]},
-      {name:'Йога', color:'#32b8aa', emoji:'🧘‍♀️', activity:[2.05,2.10,1.72,2.12,2.17,2.20,2.24,2.28,2.31,2.35], people:[49,54,54,50,45,37,48,47,38,32]}
-    ];
-    const labels=Array.from({length:10},(_,i)=>`Неделя ${i+1}`);
-    document.querySelector('#legend').innerHTML=types.map(t=>`<div class="legend-item"><span class="swatch" style="background:${t.color}"></span><span class="emoji">${t.emoji}</span><span>${t.name}</span></div>`).join('');
+      {name: 'Разминка', color: '#F08A24', views: [201, 183, 161, 105, 154, 112, 125, 125, 123, 119], users: [96, 93, 84, 58, 89, 68, 66, 62, 58, 57]},
+      {name: 'Кардио', color: '#2878D0', views: [76, 69, 64, 49, 68, 62, 52, 56, 46, 45], users: [76, 69, 64, 49, 68, 62, 52, 56, 46, 45]},
+      {name: 'Силовая', color: '#8E5B3A', views: [64, 61, 67, 55, 58, 53, 53, 44, 40, 46], users: [64, 61, 67, 55, 58, 53, 44, 40, 46]},
+      {name: 'Интенсив', color: '#D84343', views: [38, 35, 31, 35, 31, 18, 35, 34, 34, 41], users: [38, 35, 31, 35, 31, 18, 35, 34, 34, 41]},
+      {name: 'Дэнс', color: '#7652C8', views: [56, 53, 54, 36, 47, 29, 43, 41, 33, 41], users: [56, 53, 54, 36, 47, 29, 43, 41, 33, 41]},
+      {name: 'Йога', color: '#159D90', views: [49, 54, 54, 50, 45, 37, 48, 47, 38, 32], users: [49, 54, 54, 50, 45, 37, 48, 47, 38, 32]}
+    ].map(type => ({
+      ...type,
+      engagement: type.views.map(value => value / participantCount)
+    }));
 
-    const emojiPlugin={id:'bubbleEmoji',afterDatasetsDraw(chart){const ctx=chart.ctx;chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);meta.data.forEach((el,i)=>{const p=el.getProps(['x','y'],true);ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='17px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(ds.emoji,p.x,p.y);ctx.restore()})})}};
-    const rgba=(hex,alpha)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${alpha})`};
-    // Небольшое «расслоение» вокруг каждой недели не меняет данные,
-    // но позволяет увидеть все типы тренировок без плотной стопки пузырей.
-    const xOffsets=[-.38,-.23,-.08,.08,.23,.38];
-    const yOffsets=[.10,-.10,.20,-.20,.04,-.04];
-    const datasets=types.map((t,ti)=>({label:t.name,emoji:t.emoji,backgroundColor:rgba(t.color,.40),borderColor:rgba(t.color,.78),borderWidth:2,data:t.activity.map((a,i)=>({x:i+1+xOffsets[ti],y:Math.max(1.37,Math.min(2.83,a+yOffsets[ti])),r:Math.max(20,Math.sqrt(t.people[i])*3.65),week:i+1,activity:a,people:t.people[i]}))}));
-    const chart=new Chart(document.getElementById('activityChart'),{type:'bubble',data:{labels,datasets},plugins:[emojiPlugin],options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{min:0,max:10.5,grid:{color:'#e9edf3'},border:{display:false},title:{display:true,text:'Неделя',color:'#7b8798',font:{size:12}},ticks:{stepSize:1,color:'#8994a4',callback:v=>v===0?'0':v===10.5?'10,5':v}},y:{min:1.35,max:2.85,grid:{color:'#e9edf3'},border:{display:false},title:{display:true,text:'Уровень активности',color:'#7b8798',font:{size:12}},ticks:{stepSize:.25,color:'#8994a4',callback:v=>v.toFixed(2).replace('.',',')}}}}});
+    // Агрегаты рассчитаны из исходных строк Excel для общего состояния
+    // и для каждой пары «Неделя × Тип тренировки».
+    const analytics = {"all":{"ratings":{"Анна":[2175,467],"Богдана":[1413,317],"Виталия":[1251,303],"Галина":[1699,370],"Диана":[1900,396]},"depth":{"01-01":[65.6474088,66],"01-02":[75.76166568,76],"01-03":[65.6566242,66],"01-04":[63.70571266,64],"01-05":[68.73552584,69],"01-06":[37.87435272,38],"01-07":[55.7353128,56],"01-08":[48.73956605,49],"02-01":[73.87714073,74],"02-02":[68.71087778,69],"02-03":[60.9076634,61],"02-04":[60.79511472,61],"02-05":[47.7523312,48],"02-06":[23.50399473,35],"02-07":[52.72921112,53],"02-08":[53.91463517,54],"03-01":[55.82970517,56],"03-02":[63.9237703,64],"03-03":[56.7597074,57],"03-04":[66.68168629,67],"03-05":[47.90909259,48],"03-06":[30.74908238,31],"03-07":[53.85851009,54],"03-08":[37.50592868,54],"04-01":[34.89378624,35],"04-02":[48.85641252,49],"04-03":[38.71669723,39],"04-04":[54.87348394,55],"04-05":[30.92442652,31],"04-06":[34.84073412,35],"04-07":[35.97415112,36],"04-08":[49.80560963,50],"05-01":[53.79194583,54],"05-02":[67.51506725,68],"05-03":[54.78786227,55],"05-04":[57.61646983,58],"05-05":[44.84773214,45],"05-06":[30.95560935,31],"05-07":[46.78275072,47],"05-08":[44.73959596,45],"06-01":[43.86244764,44],"06-02":[61.7931947,62],"06-03":[45.84762501,46],"06-04":[36.22123009,53],"06-05":[21.93726587,22],"06-06":[17.95694292,18],"06-07":[28.93996365,29],"06-08":[36.80580201,37],"07-01":[41.78590101,42],"07-02":[51.6979562,52],"07-03":[45.80611537,46],"07-04":[52.74478711,53],"07-05":[36.91436869,37],"07-06":[34.93389775,35],"07-07":[42.89498454,43],"07-08":[47.83127944,48],"08-01":[44.78529879,45],"08-02":[55.85550544,56],"08-03":[39.91711759,40],"08-04":[43.8047171,44],"08-05":[39.93996934,40],"08-06":[33.89828355,34],"08-07":[30.20974623,41],"08-08":[46.87124778,47],"09-01":[43.86351933,44],"09-02":[45.89409128,46],"09-03":[41.78138673,42],"09-04":[39.8607508,40],"09-05":[36.86843174,37],"09-06":[33.82552808,34],"09-07":[32.86938291,33],"09-08":[37.91784219,38],"10-01":[36.84651575,37],"10-02":[44.88613424,45],"10-03":[41.76762268,42],"10-04":[45.86337485,46],"10-05":[39.92228396,40],"10-06":[40.90923908,41],"10-07":[40.87395813,41],"10-08":[31.85258809,32]},"segments":{"Бросают смотреть":{"Кардио":7,"Разминка":14,"Силовая":8,"Дэнс":1,"Интенсив":2,"Йога":6},"Досматривают всё":{"Разминка":1394,"Кардио":580,"Силовая":533,"Интенсив":330,"Дэнс":432,"Йога":448}}},"1|Дэнс":{"ratings":{"Галина":[139,30]},"depth":{"01-07":[55.7353128,56]},"segments":{"Бросают смотреть":{"Дэнс":1},"Досматривают всё":{"Дэнс":55}}},"1|Интенсив":{"ratings":{"Виталия":[82,21]},"depth":{"01-06":[37.87435272,38]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":38}}},"1|Йога":{"ratings":{"Диана":[139,28]},"depth":{"01-08":[48.73956605,49]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Йога":49}}},"1|Кардио":{"ratings":{"Анна":[186,40]},"depth":{"01-02":[75.76166568,76]},"segments":{"Бросают смотреть":{"Кардио":2},"Досматривают всё":{"Кардио":74}}},"1|Разминка":{"ratings":{"Анна":[470,101]},"depth":{"01-01":[65.6474088,66],"01-03":[65.6566242,66],"01-05":[68.73552584,69]},"segments":{"Бросают смотреть":{"Разминка":5},"Досматривают всё":{"Разминка":196}}},"1|Силовая":{"ratings":{"Богдана":[146,32]},"depth":{"01-04":[63.70571266,64]},"segments":{"Бросают смотреть":{"Силовая":1},"Досматривают всё":{"Силовая":63}}},"2|Дэнс":{"ratings":{"Богдана":[127,30]},"depth":{"02-07":[52.72921112,53]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":53}}},"2|Интенсив":{"ratings":{"Анна":[6,2]},"depth":{"02-06":[23.50399473,35]},"segments":{"Бросают смотреть":{"Интенсив":1},"Досматривают всё":{"Интенсив":34}}},"2|Йога":{"ratings":{"Диана":[111,23]},"depth":{"02-08":[53.91463517,54]},"segments":{"Бросают смотреть":{"Йога":2},"Досматривают всё":{"Йога":52}}},"2|Кардио":{"ratings":{"Богдана":[124,29]},"depth":{"02-02":[68.71087778,69]},"segments":{"Бросают смотреть":{"Кардио":2},"Досматривают всё":{"Кардио":67}}},"2|Разминка":{"ratings":{"Богдана":[431,94]},"depth":{"02-01":[73.87714073,74],"02-03":[60.9076634,61],"02-05":[47.7523312,48]},"segments":{"Бросают смотреть":{"Разминка":2},"Досматривают всё":{"Разминка":181}}},"2|Силовая":{"ratings":{"Виталия":[141,33]},"depth":{"02-04":[60.79511472,61]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Силовая":61}}},"3|Дэнс":{"ratings":{"Анна":[116,25]},"depth":{"03-07":[53.85851009,54]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":54}}},"3|Интенсив":{"ratings":{"Галина":[77,17]},"depth":{"03-06":[30.74908238,31]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":31}}},"3|Йога":{"ratings":{"Галина":[3,1]},"depth":{"03-08":[37.50592868,54]},"segments":{"Бросают смотреть":{"Йога":2},"Досматривают всё":{"Йога":52}}},"3|Кардио":{"ratings":{"Виталия":[161,39]},"depth":{"03-02":[63.9237703,64]},"segments":{"Бросают смотреть":{"Кардио":1},"Досматривают всё":{"Кардио":63}}},"3|Разминка":{"ratings":{"Виталия":[336,82]},"depth":{"03-01":[55.82970517,56],"03-03":[56.7597074,57],"03-05":[47.90909259,48]},"segments":{"Бросают смотреть":{"Разминка":3},"Досматривают всё":{"Разминка":158}}},"3|Силовая":{"ratings":{"Галина":[153,34]},"depth":{"03-04":[66.68168629,67]},"segments":{"Бросают смотреть":{"Силовая":2},"Досматривают всё":{"Силовая":65}}},"4|Дэнс":{"ratings":{"Галина":[98,21]},"depth":{"04-07":[35.97415112,36]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":36}}},"4|Интенсив":{"ratings":{"Виталия":[54,13]},"depth":{"04-06":[34.84073412,35]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":35}}},"4|Йога":{"ratings":{"Диана":[154,33]},"depth":{"04-08":[49.80560963,50]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Йога":50}}},"4|Кардио":{"ratings":{"Галина":[127,27]},"depth":{"04-02":[48.85641252,49]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Кардио":49}}},"4|Разминка":{"ratings":{"Галина":[260,58]},"depth":{"04-01":[34.89378624,35],"04-03":[38.71669723,39],"04-05":[30.92442652,31]},"segments":{"Бросают смотреть":{"Разминка":1},"Досматривают всё":{"Разминка":104}}},"4|Силовая":{"ratings":{"Анна":[110,23]},"depth":{"04-04":[54.87348394,55]},"segments":{"Бросают смотреть":{"Силовая":2},"Досматривают всё":{"Силовая":53}}},"5|Дэнс":{"ratings":{"Галина":[99,21]},"depth":{"05-07":[46.78275072,47]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":47}}},"5|Интенсив":{"ratings":{"Анна":[71,15]},"depth":{"05-06":[30.95560935,31]},"segments":{"Бросают смотреть":{"Интенсив":1},"Досматривают всё":{"Интенсив":30}}},"5|Йога":{"ratings":{"Диана":[121,25]},"depth":{"05-08":[44.73959596,45]},"segments":{"Бросают смотреть":{"Йога":1},"Досматривают всё":{"Йога":44}}},"5|Кардио":{"ratings":{"Диана":[133,29]},"depth":{"05-02":[67.51506725,68]},"segments":{"Бросают смотреть":{"Кардио":2},"Досматривают всё":{"Кардио":66}}},"5|Разминка":{"ratings":{"Диана":[347,72]},"depth":{"05-01":[53.79194583,54],"05-03":[54.78786227,55],"05-05":[44.84773214,45]},"segments":{"Бросают смотреть":{"Разминка":3},"Досматривают всё":{"Разминка":151}}},"5|Силовая":{"ratings":{"Анна":[151,32]},"depth":{"05-04":[57.61646983,58]},"segments":{"Бросают смотреть":{"Силовая":1},"Досматривают всё":{"Силовая":57}}},"6|Дэнс":{"ratings":{"Богдана":[64,15]},"depth":{"06-07":[28.93996365,29]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":29}}},"6|Интенсив":{"ratings":{"Галина":[35,7]},"depth":{"06-06":[17.95694292,18]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":18}}},"6|Йога":{"ratings":{"Диана":[102,21]},"depth":{"06-08":[36.80580201,37]},"segments":{"Бросают смотреть":{"Йога":1},"Досматривают всё":{"Йога":36}}},"6|Кардио":{"ratings":{"Анна":[145,31]},"depth":{"06-02":[61.7931947,62]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Кардио":62}}},"6|Разминка":{"ratings":{"Анна":[274,60]},"depth":{"06-01":[43.86244764,44],"06-03":[45.84762501,46],"06-05":[21.93726587,22]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Разминка":112}}},"6|Силовая":{"ratings":{"Богдана":[27,6]},"depth":{"06-04":[36.22123009,53]},"segments":{"Бросают смотреть":{"Силовая":2},"Досматривают всё":{"Силовая":51}}},"7|Дэнс":{"ratings":{"Анна":[89,20]},"depth":{"07-07":[42.89498454,43]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":43}}},"7|Интенсив":{"ratings":{"Виталия":[52,12]},"depth":{"07-06":[34.93389775,35]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":35}}},"7|Йога":{"ratings":{"Диана":[103,21]},"depth":{"07-08":[47.83127944,48]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Йога":48}}},"7|Кардио":{"ratings":{"Богдана":[120,26]},"depth":{"07-02":[51.6979562,52]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Кардио":52}}},"7|Разминка":{"ratings":{"Богдана":[271,60]},"depth":{"07-01":[41.78590101,42],"07-03":[45.80611537,46],"07-05":[36.91436869,37]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Разминка":125}}},"7|Силовая":{"ratings":{"Виталия":[123,30]},"depth":{"07-04":[52.74478711,53]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Силовая":53}}},"8|Дэнс":{"ratings":{"Богдана":[21,7]},"depth":{"08-07":[30.20974623,41]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":41}}},"8|Интенсив":{"ratings":{"Виталия":[93,23]},"depth":{"08-06":[33.89828355,34]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":34}}},"8|Йога":{"ratings":{"Диана":[155,33]},"depth":{"08-08":[46.87124778,47]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Йога":47}}},"8|Кардио":{"ratings":{"Анна":[156,33]},"depth":{"08-02":[55.85550544,56]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Кардио":56}}},"8|Разминка":{"ratings":{"Анна":[297,63]},"depth":{"08-01":[44.78529879,45],"08-03":[39.91711759,40],"08-05":[39.93996934,40]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Разминка":125}}},"8|Силовая":{"ratings":{"Галина":[111,24]},"depth":{"08-04":[43.8047171,44]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Силовая":44}}},"9|Дэнс":{"ratings":{"Галина":[83,18]},"depth":{"09-07":[32.86938291,33]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":33}}},"9|Интенсив":{"ratings":{"Виталия":[95,22]},"depth":{"09-06":[33.82552808,34]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":34}}},"9|Йога":{"ratings":{"Диана":[72,15]},"depth":{"09-08":[37.91784219,38]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Йога":38}}},"9|Кардио":{"ratings":{"Галина":[121,26]},"depth":{"09-02":[45.89409128,46]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Кардио":46}}},"9|Разминка":{"ratings":{"Галина":[294,64]},"depth":{"09-01":[43.86351933,44],"09-03":[41.78138673,42],"09-05":[36.86843174,37]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Разминка":123}}},"9|Силовая":{"ratings":{"Анна":[104,22]},"depth":{"09-04":[39.8607508,40]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Силовая":40}}},"10|Дэнс":{"ratings":{"Богдана":[82,18]},"depth":{"10-07":[40.87395813,41]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Дэнс":41}}},"10|Интенсив":{"ratings":{"Галина":[99,22]},"depth":{"10-06":[40.90923908,41]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Интенсив":41}}},"10|Йога":{"ratings":{"Диана":[92,19]},"depth":{"10-08":[31.85258809,32]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Йога":32}}},"10|Кардио":{"ratings":{"Диана":[105,22]},"depth":{"10-02":[44.88613424,45]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Кардио":45}}},"10|Разминка":{"ratings":{"Диана":[266,55]},"depth":{"10-01":[36.84651575,37],"10-03":[41.76762268,42],"10-05":[39.92228396,40]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Разминка":119}}},"10|Силовая":{"ratings":{"Виталия":[114,28]},"depth":{"10-04":[45.86337485,46]},"segments":{"Бросают смотреть":{},"Досматривают всё":{"Силовая":46}}}};
 
-    const peak=types.flatMap(t=>t.activity.map((a,i)=>({t,w:i+1,a,p:t.people[i]}))).reduce((x,y)=>y.a>x.a?y:x);
-    const drops=types.flatMap(t=>t.activity.slice(1).map((a,i)=>({t,w:i+2,from:t.activity[i],a,drop:a-t.activity[i]}))); const drop=drops.reduce((x,y)=>y.drop<x.drop?y:x);
-    const popular=types.map(t=>({t,total:t.people.reduce((a,b)=>a+b,0)})).reduce((x,y)=>y.total>x.total?y:x);
-    document.querySelector('#peakValue').textContent=`${peak.a.toFixed(2)} ${peak.t.emoji}`;document.querySelector('#peakText').textContent=`Неделя ${peak.w} · ${peak.t.name}. В этот момент участвовали ${peak.p} человек.`;
-    document.querySelector('#dropValue').textContent=`${drop.drop.toFixed(2)} ↓`;document.querySelector('#dropText').textContent=`${drop.t.name}: с ${drop.from.toFixed(2)} до ${drop.a.toFixed(2)} между неделями ${drop.w-1} и ${drop.w}.`;
-    document.querySelector('#popularValue').textContent=`${popular.t.emoji} ${popular.t.name}`;document.querySelector('#popularText').textContent=`Всего ${popular.total} участий за 10 недель — больше, чем у остальных типов.`;
+    const typeRows = Object.fromEntries(types.map((type, index) => [type.name, types.length - 1 - index]));
+    const rowLabels = [...types].reverse().map(type => type.name);
+    const maxEngagement = Math.max(...types.flatMap(type => type.engagement));
+
+    const rgba = (hex, alpha) => {
+      const value = parseInt(hex.slice(1), 16);
+      return `rgba(${value >> 16}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+    };
+
+    const format2 = value => Number(value).toFixed(2);
+    const bubbleRadius = value => 13 + Math.sqrt(value / maxEngagement) * 18;
+
+    document.querySelector('#legend').innerHTML = types.map(type => `
+      <div class="legend-item">
+        <span class="swatch" style="background:${type.color}"></span>
+        <span>${type.name}</span>
+      </div>
+    `).join('');
+
+    // Подписывает каждый пузырек значением вовлеченности.
+    const bubbleValueLabels = {
+      id: 'bubbleValueLabels',
+      afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          if (meta.hidden) return;
+
+          meta.data.forEach((element, pointIndex) => {
+            const raw = dataset.data[pointIndex];
+            const {x, y} = element.getProps(['x', 'y'], true);
+            ctx.save();
+            ctx.font = '700 10px Inter, system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const isSelected = !selectedPoint || (raw.week === selectedPoint.week && raw.type === selectedPoint.type);
+            ctx.fillStyle = isSelected ? '#ffffff' : 'rgba(255, 255, 255, .48)';
+            ctx.strokeStyle = isSelected ? 'rgba(20, 29, 45, .28)' : 'rgba(20, 29, 45, .08)';
+            ctx.lineWidth = 2;
+            ctx.strokeText(format2(raw.engagement), x, y);
+            ctx.fillText(format2(raw.engagement), x, y);
+            ctx.restore();
+          });
+        });
+      }
+    };
+
+    const bubbleDatasets = types.map(type => ({
+      label: type.name,
+      backgroundColor: rgba(type.color, .88),
+      borderColor: type.color,
+      borderWidth: 1.5,
+      hoverBackgroundColor: type.color,
+      hoverBorderColor: '#ffffff',
+      hoverBorderWidth: 2,
+      data: type.engagement.map((engagement, index) => ({
+        x: index + 1,
+        y: typeRows[type.name],
+        r: bubbleRadius(engagement),
+        week: index + 1,
+        type: type.name,
+        engagement,
+        views: type.views[index],
+        users: type.users[index]
+      }))
+    }));
+
+    let selectedPoint = null;
+
+    const engagementChart = new Chart(document.getElementById('engagementChart'), {
+      type: 'bubble',
+      data: {datasets: bubbleDatasets},
+      plugins: [bubbleValueLabels],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        layout: {padding: {top: 18, right: 18, bottom: 5, left: 8}},
+        interaction: {mode: 'nearest', intersect: true},
+        onClick(event, elements, chart) {
+          if (!elements.length) return;
+          const {datasetIndex, index} = elements[0];
+          const point = chart.data.datasets[datasetIndex].data[index];
+          const samePoint = selectedPoint && selectedPoint.week === point.week && selectedPoint.type === point.type;
+          selectedPoint = samePoint ? null : {week: point.week, type: point.type};
+          applyCrossFilter();
+        },
+        plugins: {
+          legend: {display: false},
+          tooltip: {
+            displayColors: true,
+            backgroundColor: 'rgba(20, 29, 45, .96)',
+            titleFont: {size: 13, weight: '700'},
+            bodyFont: {size: 12},
+            padding: 12,
+            callbacks: {
+              title: items => `Неделя ${items[0].raw.week}`,
+              label: context => {
+                const point = context.raw;
+                return [
+                  `Тип тренировки: ${point.type}`,
+                  `Вовлеченность: ${format2(point.engagement)}`,
+                  `Кол-во участников: ${point.users}`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            min: .45,
+            max: 10.55,
+            afterBuildTicks: axis => {
+              axis.ticks = weeks.map(value => ({value}));
+            },
+            grid: {color: '#e8ecf2', drawTicks: false},
+            border: {display: false},
+            title: {
+              display: true,
+              text: 'Неделя программы',
+              color: '#68758a',
+              font: {size: 12, weight: '600'},
+              padding: {top: 12}
+            },
+            ticks: {
+              color: '#667286',
+              padding: 9,
+              callback: value => `Неделя ${value}`
+            }
+          },
+          y: {
+            min: -.55,
+            max: 5.55,
+            afterBuildTicks: axis => {
+              axis.ticks = rowLabels.map((_, value) => ({value}));
+            },
+            grid: {color: '#e8ecf2', drawTicks: false},
+            border: {display: false},
+            title: {
+              display: true,
+              text: 'Тип тренировки',
+              color: '#68758a',
+              font: {size: 12, weight: '600'},
+              padding: {bottom: 10}
+            },
+            ticks: {
+              color: '#46536a',
+              font: {size: 12, weight: '600'},
+              padding: 12,
+              callback: value => rowLabels[value] ?? ''
+            }
+          }
+        }
+      }
+    });
+
+    const trainers = ['Анна', 'Богдана', 'Виталия', 'Галина', 'Диана'];
+    const segments = ['Бросают смотреть', 'Досматривают всё'];
+
+    const barValueLabels = {
+      id: 'barValueLabels',
+      afterDatasetsDraw(chart) {
+        const settings = chart.options.plugins.barValueLabels;
+        if (!settings?.display) return;
+        const {ctx} = chart;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          meta.data.forEach((bar, index) => {
+            const value = dataset.data[index];
+            if (value === null || value === undefined) return;
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '700 9px Inter, system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(Number(value).toFixed(settings.precision ?? 2), bar.x - 5, bar.y);
+            ctx.restore();
+          });
+        });
+      }
+    };
+
+    const miniTooltip = {
+      backgroundColor: 'rgba(20, 29, 45, .96)',
+      padding: 9,
+      displayColors: true,
+      titleFont: {size: 11, weight: '700'},
+      bodyFont: {size: 10}
+    };
+
+    const trainerChart = new Chart(document.getElementById('trainerChart'), {
+      type: 'bar',
+      plugins: [barValueLabels],
+      data: {
+        labels: trainers,
+        datasets: [{
+          data: [],
+          backgroundColor: ['#F08A24', '#2878D0', '#8E5B3A', '#7652C8', '#159D90'],
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: .68
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: {display: false},
+          barValueLabels: {display: true, precision: 2},
+          tooltip: {
+            ...miniTooltip,
+            callbacks: {label: item => `Средняя оценка: ${format2(item.raw)}`}
+          }
+        },
+        scales: {
+          x: {
+            min: 1,
+            max: 5,
+            grid: {color: '#eef1f5'},
+            border: {display: false},
+            ticks: {stepSize: 1, color: '#8994a4', font: {size: 9}},
+            title: {display: true, text: 'Средняя оценка', color: '#7b8798', font: {size: 9, weight: '600'}}
+          },
+          y: {
+            grid: {display: false},
+            border: {display: false},
+            ticks: {color: '#58657a', font: {size: 9, weight: '600'}}
+          }
+        }
+      }
+    });
+
+    const candidatesChart = new Chart(document.getElementById('candidatesChart'), {
+      type: 'bar',
+      plugins: [barValueLabels],
+      data: {
+        labels: [],
+        datasets: [{
+          data: [],
+          backgroundColor: '#D95A55',
+          borderRadius: 6,
+          borderSkipped: false,
+          barPercentage: .7
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: {display: false},
+          barValueLabels: {display: true, precision: 2},
+          tooltip: {
+            ...miniTooltip,
+            displayColors: false,
+            callbacks: {label: item => `Средняя глубина: ${format2(item.raw)}`}
+          }
+        },
+        scales: {
+          x: {
+            min: 0,
+            max: 1,
+            grid: {color: '#eef1f5'},
+            border: {display: false},
+            ticks: {stepSize: .25, color: '#8994a4', font: {size: 9}},
+            title: {display: true, text: 'Средняя глубина', color: '#7b8798', font: {size: 9, weight: '600'}}
+          },
+          y: {
+            grid: {display: false},
+            border: {display: false},
+            ticks: {color: '#58657a', font: {size: 9, weight: '650'}}
+          }
+        }
+      }
+    });
+
+    const emptySegmentLabels = {
+      id: 'emptySegmentLabels',
+      afterDatasetsDraw(chart) {
+        const totals = chart.$segmentTotals ?? [];
+        const {ctx, chartArea, scales} = chart;
+        totals.forEach((total, index) => {
+          if (total !== 0) return;
+          ctx.save();
+          ctx.fillStyle = '#98a2b1';
+          ctx.font = '600 9px Inter, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('нет пользователей', scales.x.getPixelForValue(index), chartArea.bottom - 5);
+          ctx.restore();
+        });
+      }
+    };
+
+    const segmentValueLabels = {
+      id: 'segmentValueLabels',
+      afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          meta.data.forEach((bar, index) => {
+            const value = Number(dataset.data[index] || 0);
+            if (value < 5) return;
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `700 ${Math.max(7, Math.min(9, bar.height - 1))}px Inter, system-ui, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${Math.round(value)}%`, bar.x, bar.y + bar.height / 2);
+            ctx.restore();
+          });
+        });
+      }
+    };
+
+    const segmentsChart = new Chart(document.getElementById('segmentsChart'), {
+      type: 'bar',
+      plugins: [emptySegmentLabels, segmentValueLabels],
+      data: {
+        labels: segments,
+        datasets: types.map(type => ({
+          label: type.name,
+          data: [],
+          backgroundColor: type.color,
+          borderWidth: 0,
+          borderRadius: 3,
+          borderSkipped: false
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {boxWidth: 8, boxHeight: 8, padding: 7, color: '#637086', font: {size: 8}}
+          },
+          tooltip: {
+            ...miniTooltip,
+            callbacks: {
+              title: items => `Сегмент: ${items[0].label}`,
+              label: item => {
+                const views = item.dataset.rawViews?.[item.dataIndex] ?? 0;
+                return `${item.dataset.label}: ${Number(item.raw).toFixed(1)}% (${views} просмотров)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: {display: false},
+            border: {display: false},
+            ticks: {color: '#58657a', font: {size: 9, weight: '600'}}
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            max: 100,
+            grid: {color: '#eef1f5'},
+            border: {display: false},
+            ticks: {color: '#8994a4', font: {size: 9}, stepSize: 25, callback: value => `${value}%`},
+            title: {display: true, text: 'Доля просмотров внутри сегмента', color: '#7b8798', font: {size: 9, weight: '600'}}
+          }
+        }
+      }
+    });
+
+    function getCurrentStats() {
+      return analytics[selectedPoint ? `${selectedPoint.week}|${selectedPoint.type}` : 'all'];
+    }
+
+    function updateTrainerChart(stats) {
+      trainerChart.data.datasets[0].data = trainers.map(trainer => {
+        const value = stats.ratings[trainer];
+        return value ? value[0] / value[1] : null;
+      });
+      trainerChart.update();
+    }
+
+    function updateCandidatesChart(stats) {
+      const candidates = Object.entries(stats.depth)
+        .map(([code, value]) => ({code, depth: value[0] / value[1]}))
+        .sort((a, b) => a.depth - b.depth)
+        .slice(0, 7);
+
+      candidatesChart.data.labels = candidates.map(item => item.code);
+      candidatesChart.data.datasets[0].data = candidates.map(item => item.depth);
+      candidatesChart.update();
+    }
+
+    function updateSegmentsChart(stats) {
+      const totals = segments.map(segment =>
+        types.reduce((sum, type) => sum + (stats.segments[segment]?.[type.name] ?? 0), 0)
+      );
+
+      segmentsChart.data.datasets.forEach((dataset, typeIndex) => {
+        const type = types[typeIndex].name;
+        const rawViews = segments.map(segment => stats.segments[segment]?.[type] ?? 0);
+        dataset.rawViews = rawViews;
+        dataset.data = rawViews.map((views, segmentIndex) =>
+          totals[segmentIndex] ? views / totals[segmentIndex] * 100 : 0
+        );
+      });
+      segmentsChart.$segmentTotals = totals;
+      segmentsChart.update();
+    }
+
+    function updateBubbleSelection() {
+      engagementChart.data.datasets.forEach(dataset => {
+        const baseColor = types.find(type => type.name === dataset.label).color;
+        dataset.backgroundColor = dataset.data.map(point => {
+          if (!selectedPoint) return rgba(baseColor, .88);
+          return point.week === selectedPoint.week && point.type === selectedPoint.type
+            ? rgba(baseColor, 1)
+            : rgba(baseColor, .16);
+        });
+        dataset.borderColor = dataset.data.map(point => {
+          if (!selectedPoint) return baseColor;
+          return point.week === selectedPoint.week && point.type === selectedPoint.type ? '#172033' : rgba(baseColor, .24);
+        });
+        dataset.borderWidth = dataset.data.map(point =>
+          selectedPoint && point.week === selectedPoint.week && point.type === selectedPoint.type ? 3 : 1.5
+        );
+      });
+      engagementChart.update();
+    }
+
+    function updateFilterLabels() {
+      const filterState = document.querySelector('#filterState');
+      const filterText = document.querySelector('#filterText');
+      const captions = document.querySelectorAll('.mini-filter-caption');
+      const caption = selectedPoint ? `неделя ${selectedPoint.week} · ${selectedPoint.type}` : 'все данные';
+
+      filterState.classList.toggle('active', Boolean(selectedPoint));
+      filterText.textContent = selectedPoint
+        ? `Фильтр: неделя ${selectedPoint.week} · ${selectedPoint.type}`
+        : 'Все недели и типы · нажмите на пузырек для фильтрации';
+      captions.forEach(element => { element.textContent = caption; });
+    }
+
+    function applyCrossFilter() {
+      const stats = getCurrentStats();
+      updateTrainerChart(stats);
+      updateCandidatesChart(stats);
+      updateSegmentsChart(stats);
+      updateBubbleSelection();
+      updateFilterLabels();
+    }
+
+    document.querySelector('#resetFilter').addEventListener('click', event => {
+      event.stopPropagation();
+      selectedPoint = null;
+      applyCrossFilter();
+    });
+
+    applyCrossFilter();
   </script>
 </body>
 </html>
